@@ -1,16 +1,31 @@
-import express from 'express';
-import Card from '../models/Card.js';
+import express from "express";
+import Card from "../models/Card.js";
 
 const router = express.Router();
 
-router.get('/', async (req, res) => {
-    const cards = await Card.find().sort('order');
+// GET /api/cards
+router.get("/", async (req, res) => {
+  try {
+    const cards = await Card.find();
     res.json(cards);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch cards" });
+  }
 });
 
-router.put('/:id', async (req, res) => {
-    const updated = await Card.findByIdAndUpdate(req.params.id, req.body, { new: true});
+
+// PATCH /api/cards/:id
+router.patch("/:id", async (req, res) => {
+  try {
+    const updated = await Card.findByIdAndUpdate(
+      req.params.id,
+      { title: req.body.title },
+      { new: true }
+    );
     res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: "Update failed." });
+  }
 });
 
 export default router;

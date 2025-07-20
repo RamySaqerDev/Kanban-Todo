@@ -24,16 +24,11 @@ export default function KanbanBoard() {
     fetchData();
   }, []);
 
-  const handleCardUpdate = async (updatedCard) => {
-    try {
-      await axios.put(`http://localhost:5000/api/cards/${updatedCard._id}`, updatedCard);
-      setCards((prevCards) =>
-        prevCards.map((card) => (card._id === updatedCard._id ? updatedCard : card))
-      );
-    } catch (err) {
-      console.error("Failed to update card", err);
-    }
-  };
+    const handleCardUpdate = (updatedCard) => {
+        setCards((prevCards) =>
+            prevCards.map((card) => (card._id === updatedCard._id ? updatedCard : card))
+        );
+    };
 
   return (
     <div className="flex overflow-x-auto gap-6 p-6 h-screen bg-gray-50">
