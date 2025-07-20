@@ -30,6 +30,13 @@ export default function KanbanBoard() {
         );
     };
 
+    const handleListUpdate = (updatedList) => {
+        setLists((prevLists) =>
+        prevLists.map((list) => (list._id === updatedList._id ? updatedList : list))
+  );
+};
+
+
   return (
     <div className="flex overflow-x-auto gap-6 p-6 h-screen bg-gray-50">
       {lists.map((list) => {
@@ -40,6 +47,7 @@ export default function KanbanBoard() {
             list={list}
             cards={listCards}
             onCardUpdate={handleCardUpdate}
+            onListUpdate={handleListUpdate}
           />
         );
       })}
