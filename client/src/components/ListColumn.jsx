@@ -1,68 +1,61 @@
-// src/components/ListColumn.jsx
 import React, { useState } from "react";
+import { useDrop } from "react-dnd";
 import CardItem from "./CardItem";
-import axios from "axios";
 
-export default function ListColumn({ list, cards, onCardUpdate, onListUpdate }) {
-  const [isEditing, setIsEditing] = useState(false);
+
+export default function ListColumn({ list, cards, onCardUpdate, onListTitleUpdate }) {
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(list.title);
-  const [originalTitle, setOriginalTitle] = useState(list.title);
 
-  const handleSave = async () => {
-    if (title.trim() === "" || title === originalTitle) {
-      setTitle(originalTitle);
-      setIsEditing(false);
-      return;
-    }
+  const [, drop] = useDrop({
+    accept: "CARD",
+    drop: (item) => {
+      console.log("Dropped card", item._id, "onto list", list._id);
 
-    try {
-      const res = await axios.patch(`http://localhost:5050/api/lists/${list._id}`, {
-        title,
-      });
+      if (item.listId !== list._id) {
+        onCardUpdate(item._id, { listId: list._id });
+      }
+    },
+  });
 
-      setOriginalTitle(res.data.title);
-      setIsEditing(false);
-      onListUpdate(res.data);
-    } catch (err) {
-      console.error("Failed to update list title", err);
+  const handleTitleBlur = () => {
+    setIsEditingTitle(false);
+    if (title !== list.title) {
+      onListTitleUpdate(list._id, { title });
     }
   };
 
-  const handleKeyDown = (e) => {
+  const handleTitleKeyDown = (e) => {
     if (e.key === "Enter") {
-      handleSave();
+      handleTitleBlur();
     } else if (e.key === "Escape") {
-      setTitle(originalTitle);
-      setIsEditing(false);
+      setTitle(list.title);
+      setIsEditingTitle(false);
     }
-  };
-
-  const handleStartEditing = () => {
-    setOriginalTitle(title); // snapshot title
-    setIsEditing(true);
   };
 
   return (
-    <div className="w-72 flex-shrink-0 bg-white rounded shadow p-4 border border-gray-200">
-      {isEditing ? (
+    <div
+      ref={drop}
+      className="w-72 flex-shrink-0 bg-white rounded shadow p-4 border border-gray-200"
+    >
+      {isEditingTitle ? (
         <input
-          type="text"
-          className="w-full text-xl font-bold px-2 py-1 border border-blue-500 rounded focus:outline-none"
+          className="text-xl font-bold w-full border px-2 py-1 rounded mb-4"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          onBlur={handleSave}
-          onKeyDown={handleKeyDown}
+          onBlur={handleTitleBlur}
+          onKeyDown={handleTitleKeyDown}
           autoFocus
         />
       ) : (
         <h2
-          className="text-xl font-bold mb-4 cursor-pointer hover:underline"
-          onClick={handleStartEditing}
+          className="text-xl font-bold mb-4 cursor-text"
+          onClick={() => setIsEditingTitle(true)}
         >
-          {title}
+          {list.title}
         </h2>
       )}
-
       <div className="flex flex-col gap-3">
         {cards.map((card) => (
           <CardItem key={card._id} card={card} onUpdate={onCardUpdate} />
@@ -71,4 +64,3 @@ export default function ListColumn({ list, cards, onCardUpdate, onListUpdate }) 
     </div>
   );
 }
-

@@ -13,6 +13,20 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.put('/:id', async (req, res) => {
+  try {
+    const updatedCard = await Card.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    if (!updatedCard) return res.status(404).json({ message: "Card not found" });
+    res.json(updatedCard);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 // PATCH /api/cards/:id
 router.patch("/:id", async (req, res) => {
