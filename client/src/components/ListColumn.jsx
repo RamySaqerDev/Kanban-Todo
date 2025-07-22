@@ -4,7 +4,7 @@ import { useDrop } from "react-dnd";
 import CardItem from "./CardItem";
 import axios from "axios";
 
-export default function ListColumn({ list, cards, onCardUpdate, onListTitleUpdate, onCardCreate }) {
+export default function ListColumn({ list, cards, onCardUpdate, onListTitleUpdate, onCardCreate, onCardDelete }) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(list.title);
   const [newCardTitle, setNewCardTitle] = useState("");
@@ -93,7 +93,7 @@ export default function ListColumn({ list, cards, onCardUpdate, onListTitleUpdat
         {cards
           .sort((a, b) => a.order - b.order)
           .map((card) => (
-            <CardItem key={card._id} card={card} onUpdate={onCardUpdate} />
+            <CardItem key={card._id} card={card} onUpdate={onCardUpdate} onDelete={onCardDelete} />
           ))}
       </div>
 

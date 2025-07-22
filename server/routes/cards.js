@@ -47,6 +47,19 @@ router.post("/", async (req, res) => {
   }
 });
 
+// DELETE /api/cards/:id
+router.delete("/:id", async (req, res) => {
+  try {
+    const deletedCard = await Card.findByIdAndDelete(req.params.id);
+    if (!deletedCard) {
+      return res.status(404).json({ message: "Card not found" });
+    }
+    res.status(200).json({ message: "Card deleted" });
+  } catch (error) {
+    console.error("Error deleting card:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 
 // PATCH /api/cards/:id

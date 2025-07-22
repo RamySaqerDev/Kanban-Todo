@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useDrag } from "react-dnd";
 
-export default function CardItem({ card, onUpdate }) {
+export default function CardItem({ card, onUpdate, onDelete }) {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(card.title);
 
@@ -25,9 +25,8 @@ export default function CardItem({ card, onUpdate }) {
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      handleBlur();
-    } else if (e.key === "Escape") {
+    if (e.key === "Enter") handleBlur();
+    else if (e.key === "Escape") {
       setTitle(card.title);
       setIsEditing(false);
     }
@@ -36,7 +35,7 @@ export default function CardItem({ card, onUpdate }) {
   return (
     <div
       ref={drag}
-      className={`p-3 bg-white border rounded shadow-sm cursor-move ${
+      className={`relative p-3 bg-white border rounded shadow-sm cursor-move ${
         isDragging ? "opacity-50" : ""
       }`}
     >
@@ -50,15 +49,17 @@ export default function CardItem({ card, onUpdate }) {
           autoFocus
         />
       ) : (
-        <div onClick={() => setIsEditing(true)} className="cursor-text font-medium">
+        <div onClick={() => setIsEditing(true)} className="cursor-text">
           {card.title}
         </div>
       )}
-      {card.description && (
-        <div className="text-sm text-gray-600 mt-1 whitespace-pre-wrap">
-          {card.description}
-        </div>
-      )}
+
+      <button
+        onClick={() => onDelete(card._id)}
+        className="absolute top-1 right-1 text-red-500 text-xs hover:underline"
+      >
+        ✕
+      </button>
     </div>
   );
 }

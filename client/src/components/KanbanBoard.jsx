@@ -54,6 +54,15 @@ const handleCardUpdate = async (cardId, updates) => {
     }
   };
 
+  const handleCardDelete = async (cardId) => {
+    try {
+      await axios.delete(`http://localhost:5050/api/cards/${cardId}`);
+      setCards((prev) => prev.filter((card) => card._id !== cardId));
+    } catch (err) {
+      console.error("Failed to delete card", err);
+    }
+  };
+
   const handleCardCreate = (newCard) => {
     setCards((prev) => [...prev, newCard])
   }
@@ -70,6 +79,7 @@ const handleCardUpdate = async (cardId, updates) => {
               onCardUpdate={handleCardUpdate}
               onListTitleUpdate={handleListTitleUpdate}
               onCardCreate={handleCardCreate}
+              onCardDelete={handleCardDelete}
             />
           );
         })}
