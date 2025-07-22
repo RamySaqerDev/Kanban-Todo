@@ -5,14 +5,14 @@ import dotenv from "dotenv";
 
 import cardsRoutes from './routes/cards.js';
 import listsRoutes from './routes/lists.js';
-
+import authRoutes from "./routes/auth.js";
 dotenv.config();
 
 const app = express ();
 app.use(cors()); // fully open for development
 
 app.use(express.json());
-
+app.use("/api/auth", authRoutes);
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI);
 
