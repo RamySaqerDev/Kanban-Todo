@@ -108,6 +108,16 @@ const handleCardUpdate = async (cardId, updates) => {
     }
   };
 
+  const handleListDelete = async (listId) => {
+    try {
+      await axios.delete(`http://localhost:5050/api/lists/${listId}`);
+      setLists((prev) => prev.filter((list) => list._id !== listId));
+      setCards((prev) => prev.filter((card) => card.listId !== listId));
+    } catch (err) {
+      console.error("Failed to delete list", err);
+    }
+  };
+
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -129,6 +139,7 @@ const handleCardUpdate = async (cardId, updates) => {
                 onCardCreate={handleCardCreate}
                 onCardDelete={handleCardDelete}
                 moveList={moveList}
+                onListDelete={handleListDelete}
               />
           );
         })}

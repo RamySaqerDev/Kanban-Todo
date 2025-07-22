@@ -10,6 +10,7 @@ export default function ListColumn({
   onCardCreate,
   onCardDelete,
   moveList,
+  onListDelete,
 }) {
   const ref = useRef(null);
 
@@ -92,15 +93,17 @@ export default function ListColumn({
   };
 
   return (
-    <div
-      ref={ref}
-      className={`w-72 flex-shrink-0 bg-white rounded shadow p-4 border border-gray-200 transition-opacity duration-200 ${
-        isDragging ? "opacity-50" : ""
-      }`}
-    >
+  <div
+    ref={ref}
+    className={`w-72 flex-shrink-0 bg-white rounded shadow p-4 border border-gray-200 transition-opacity duration-200 ${
+      isDragging ? "opacity-50" : ""
+    }`}
+  >
+    {/* List title and delete button */}
+    <div className="flex justify-between items-center mb-4">
       {isEditingTitle ? (
         <input
-          className="text-xl font-bold w-full border px-2 py-1 rounded mb-4"
+          className="text-xl font-bold w-full border px-2 py-1 rounded"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           onBlur={handleTitleBlur}
@@ -109,68 +112,79 @@ export default function ListColumn({
         />
       ) : (
         <h2
-          className="text-xl font-bold mb-4 cursor-text"
+          className="text-xl font-bold cursor-text"
           onClick={() => setIsEditingTitle(true)}
         >
           {list.title}
         </h2>
       )}
-
-      <div className="flex flex-col gap-3">
-        {cards
-          .sort((a, b) => a.order - b.order)
-          .map((card) => (
-            <CardItem
-              key={card._id}
-              card={card}
-              onUpdate={onCardUpdate}
-              onDelete={onCardDelete}
-            />
-          ))}
-      </div>
-
-      <div className="mt-4">
-        {isAddingCard ? (
-          <div className="flex flex-col gap-2">
-            <input
-              className="w-full border px-2 py-1 rounded"
-              value={newCardTitle}
-              onChange={(e) => setNewCardTitle(e.target.value)}
-              placeholder="Card title"
-              autoFocus
-            />
-            <textarea
-              className="w-full border px-2 py-1 rounded"
-              value={newCardDescription}
-              onChange={(e) => setNewCardDescription(e.target.value)}
-              placeholder="Card description"
-              rows={3}
-              onKeyDown={handleAddKeyDown}
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={handleAddCard}
-                className="bg-blue-500 text-white px-3 py-1 rounded text-sm"
-              >
-                Add
-              </button>
-              <button
-                onClick={() => setIsAddingCard(false)}
-                className="text-gray-500 text-sm"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button
-            onClick={() => setIsAddingCard(true)}
-            className="text-blue-500 hover:underline mt-2 text-sm"
-          >
-            + Add Card
-          </button>
-        )}
-      </div>
+      <button
+        className="text-red-500 text-sm ml-2"
+        onClick={() => {
+          // eslint-disable-next-line no-restricted-globals
+          if (confirm("Are you sure you want to delete this list?")) {
+            onListDelete(list._id);
+          }
+        }}
+      >
+        ✕
+      </button>
     </div>
-  );
+
+    {/* List of cards */}
+    <div className="flex flex-col gap-3 mb-4">
+      {cards
+        .sort((a, b) => a.order - b.order)
+        .map((card) => (
+          <CardItem
+            key={card._id}
+            card={card}
+            onUpdate={onCardUpdate}
+            onDelete={onCardDelete}
+          />
+        ))}
+    </div>
+
+    {/* Add new card form */}
+    {isAddingCard ? (
+      <div className="flex flex-col gap-2">
+        <input
+          className="w-full border px-2 py-1 rounded"
+          value={newCardTitle}
+          onChange={(e) => setNewCardTitle(e.target.value)}
+          placeholder="Card title"
+          autoFocus
+        />
+        <textarea
+          className="w-full border px-2 py-1 rounded"
+          value={newCardDescription}
+          onChange={(e) => setNewCardDescription(e.target.value)}
+          placeholder="Card description"
+          rows={3}
+        />
+        <div className="flex gap-2">
+          <button
+            onClick={handleAddCard}
+            className="bg-blue-500 text-white px-3 py-1 rounded text-sm"
+          >
+            Add
+          </button>
+          <button
+            onClick={() => setIsAddingCard(false)}
+            className="text-gray-500 text-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ) : (
+      <button
+        onClick={() => setIsAddingCard(true)}
+        className="text-blue-500 hover:underline mt-2 text-sm"
+      >
+        + Add Card
+      </button>
+    )}
+  </div>
+);
 }

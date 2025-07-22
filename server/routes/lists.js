@@ -33,4 +33,17 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+// DELETE /api/lists/:id
+router.delete("/:id", async (req, res) => {
+  try {
+    const deleted = await List.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ message: "List not found" });
+    res.json({ message: "List deleted" });
+  } catch (err) {
+    console.error("Failed to delete list:", err);
+    res.status(500).json({ error: "Failed to delete list" });
+  }
+});
+
+
 export default router;
