@@ -7,23 +7,40 @@ export default function ListColumn({ list, cards, onCardUpdate, onListTitleUpdat
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(list.title);
 
+  // Drop handler for the list (when dropping into an empty column)
   const [, drop] = useDrop({
     accept: "CARD",
-    drop: (draggedCard) => {
-      const isSameList = draggedCard.listId === list._id;
-
-      // Determine new order (naively place at end of list)
-      const maxOrder = cards.reduce((max, c) => Math.max(max, c.order || 0), 0);
-      const newOrder = maxOrder + 1;
-
-      if (!isSameList) {
-        onCardUpdate(draggedCard._id, {
-          listId: list._id,
-          order: newOrder,
-        });
+    drop: (draggedItem, monitor) => {
+      if (!cards.length) {
+        if (draggedItem.listId !== list._id || draggedItem.order !== 0) {
+          onCardUpdate(draggedItem._id, {
+            listId: list._id,
+            order: 0,
+          });
+        }
       }
     },
   });
+
+  // Move card to new position or column
+  const moveCard = ({ dragged, target, position }) => {
+    const sortedCards = [...cards].sort((a, b) => a.order - b.order);
+
+    const filtered = sortedCards.filter((c) => c._id !== dragged._id);
+
+    const newCard = {
+      ...dragged,
+      listId: list._id,
+    };
+
+    filtered.splice(position, 0, newCard);
+
+    filtered.forEach((c, i) => {
+      if (c.order !== i || c.listId !== list._id) {
+        onCardUpdate(c._id, { order: i, listId: list._id });
+      }
+    });
+  };
 
   const handleTitleBlur = () => {
     setIsEditingTitle(false);
@@ -63,11 +80,19 @@ export default function ListColumn({ list, cards, onCardUpdate, onListTitleUpdat
           {list.title}
         </h2>
       )}
+
       <div className="flex flex-col gap-3">
         {cards
-          .sort((a, b) => (a.order || 0) - (b.order || 0))
-          .map((card) => (
-            <CardItem key={card._id} card={card} onUpdate={onCardUpdate} />
+          .sort((a, b) => a.order - b.order)
+          .map((card, index) => (
+            <CardItem
+              key={card._id}
+              card={card}
+              index={index}
+              listId={list._id}
+              onUpdate={onCardUpdate}
+              moveCard={moveCard}
+            />
           ))}
       </div>
     </div>
