@@ -42,6 +42,7 @@ export default function ListColumn({ list, cards, onCardUpdate, onListTitleUpdat
     if ((e.key === "Enter" && (e.ctrlKey || e.metaKey))) {
       e.preventDefault();
       handleAddCard();
+      
     }
     if (e.key === "Escape") {
       setNewCardTitle("");
@@ -111,6 +112,7 @@ export default function ListColumn({ list, cards, onCardUpdate, onListTitleUpdat
               className="w-full border px-2 py-1 rounded"
               value={newCardDescription}
               onChange={(e) => setNewCardDescription(e.target.value)}
+              onKeyDown={handleAddKeyDown}
               placeholder="Card description"
               rows={3}
             />

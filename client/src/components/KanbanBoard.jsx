@@ -4,6 +4,7 @@ import axios from "axios";
 import ListColumn from "./ListColumn";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import AddListForm from "./AddListForm";
 
 export default function KanbanBoard() {
   const [lists, setLists] = useState([]);
@@ -66,8 +67,21 @@ const handleCardUpdate = async (cardId, updates) => {
   const handleCardCreate = (newCard) => {
     setCards((prev) => [...prev, newCard])
   }
+
+  const handleAddList = async (title) => {
+    try {
+      const res = await axios.post("http://localhost:5050/api/lists", { title });
+      setLists((prev) => [...prev, res.data]);
+    } catch(err) {
+      console.error("Failed to add list", err)
+    }
+  };
+
   return (
     <DndProvider backend={HTML5Backend}>
+      <div className="p-6">
+        <AddListForm onAddList={handleAddList} />
+      </div>
       <div className="flex overflow-x-auto gap-6 p-6 h-screen bg-gray-50">
         {lists.map((list) => {
           const listCards = cards.filter((card) => card.listId === list._id);
