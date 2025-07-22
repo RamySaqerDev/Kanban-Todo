@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import { useDrop, useDrag } from "react-dnd";
 import CardItem from "./CardItem";
+import ConfirmModal from "./ConfirmModal";
 
 export default function ListColumn({
   list,
@@ -19,6 +20,7 @@ export default function ListColumn({
   const [isAddingCard, setIsAddingCard] = useState(false);
   const [newCardTitle, setNewCardTitle] = useState("");
   const [newCardDescription, setNewCardDescription] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
 
   // Drag source (this list)
   const [{ isDragging }, drag] = useDrag({
@@ -92,6 +94,11 @@ export default function ListColumn({
     }
   };
 
+  const confirmDelete = () => {
+    onListDelete(list._id);
+    setShowConfirm(false);
+  };
+
   return (
   <div
     ref={ref}
@@ -118,17 +125,13 @@ export default function ListColumn({
           {list.title}
         </h2>
       )}
-      <button
-        className="text-red-500 text-sm ml-2"
-        onClick={() => {
-          // eslint-disable-next-line no-restricted-globals
-          if (confirm("Are you sure you want to delete this list?")) {
-            onListDelete(list._id);
-          }
-        }}
-      >
-        ✕
-      </button>
+       <button
+          className="text-red-500 text-sm hover:underline ml-2"
+          onClick={() => setShowConfirm(true)} 
+          title="Delete List"
+        >
+          ✕
+        </button>
     </div>
 
     {/* List of cards */}
@@ -144,7 +147,14 @@ export default function ListColumn({
           />
         ))}
     </div>
-
+    {/* modal */}
+    <ConfirmModal
+      isOpen={showConfirm}
+      title="Delete List"
+      message={`Are you sure you want to delete the list "${list.title}" and all its cards?`}
+      onCancel={() => setShowConfirm(false)}
+      onConfirm={confirmDelete}
+    />
     {/* Add new card form */}
     {isAddingCard ? (
       <div className="flex flex-col gap-2">
@@ -154,6 +164,7 @@ export default function ListColumn({
           onChange={(e) => setNewCardTitle(e.target.value)}
           placeholder="Card title"
           autoFocus
+          onKeyDown={handleAddKeyDown}
         />
         <textarea
           className="w-full border px-2 py-1 rounded"
@@ -161,6 +172,7 @@ export default function ListColumn({
           onChange={(e) => setNewCardDescription(e.target.value)}
           placeholder="Card description"
           rows={3}
+          onKeyDown={handleAddKeyDown}
         />
         <div className="flex gap-2">
           <button

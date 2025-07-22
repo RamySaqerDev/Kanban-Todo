@@ -1,5 +1,6 @@
 import express from 'express';
 import List from '../models/List.js';
+import Card from '../models/Card.js';
 
 const router = express.Router();
 
@@ -36,9 +37,17 @@ router.put("/:id", async (req, res) => {
 // DELETE /api/lists/:id
 router.delete("/:id", async (req, res) => {
   try {
-    const deleted = await List.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ message: "List not found" });
-    res.json({ message: "List deleted" });
+    const listId = req.params.id;
+
+    // Deleting all cards with this listId
+    await Card.deleteMany({ listId });
+    // delete list itself
+    const deletedList = await List.findByIdAndDelete(listId);
+    if (!deletedList) {
+        return res.status.json({ message: 'List not found' });
+    }
+
+    res.json({ message: 'List and its cards deleted succesfully' });
   } catch (err) {
     console.error("Failed to delete list:", err);
     res.status(500).json({ error: "Failed to delete list" });
