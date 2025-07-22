@@ -1,24 +1,53 @@
-// src/components/ListColumn.jsx
-import React, { useState } from "react";
-import { useDrop } from "react-dnd";
+import React, { useRef, useState } from "react";
+import { useDrop, useDrag } from "react-dnd";
 import CardItem from "./CardItem";
-import axios from "axios";
 
-export default function ListColumn({ list, cards, onCardUpdate, onListTitleUpdate, onCardCreate, onCardDelete }) {
+export default function ListColumn({
+  list,
+  cards,
+  onCardUpdate,
+  onListTitleUpdate,
+  onCardCreate,
+  onCardDelete,
+  moveList,
+}) {
+  const ref = useRef(null);
+
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(list.title);
+  const [isAddingCard, setIsAddingCard] = useState(false);
   const [newCardTitle, setNewCardTitle] = useState("");
   const [newCardDescription, setNewCardDescription] = useState("");
-  const [isAddingCard, setIsAddingCard] = useState(false);
 
+  // Drag source (this list)
+  const [{ isDragging }, drag] = useDrag({
+    type: "LIST",
+    item: { _id: list._id },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  // Drop target (another list hovers over this)
   const [, drop] = useDrop({
-    accept: "CARD",
-    drop: (item) => {
-      if (item.listId !== list._id) {
-        onCardUpdate(item._id, { listId: list._id });
+    accept: ["LIST", "CARD"],
+    drop: (item, monitor) => {
+      if (monitor.getItemType() === "CARD") {
+        // Card dropped onto list column
+        if (item.listId !== list._id) {
+          onCardUpdate(item._id, { listId: list._id });
+        }
+      }
+    },
+    hover(draggedItem, monitor) {
+      if (monitor.getItemType() === "LIST" && draggedItem._id !== list._id) {
+        moveList(draggedItem._id, list._id);
+        draggedItem._id = list._id; // prevent flickering
       }
     },
   });
+
+  drag(drop(ref)); // Combine drag and drop on the same element
 
   const handleTitleBlur = () => {
     setIsEditingTitle(false);
@@ -36,13 +65,24 @@ export default function ListColumn({ list, cards, onCardUpdate, onListTitleUpdat
     }
   };
 
+  const handleAddCard = async () => {
+    if (!newCardTitle.trim()) return;
 
+    await onCardCreate({
+      title: newCardTitle.trim(),
+      description: newCardDescription.trim(),
+      listId: list._id,
+    });
+
+    setNewCardTitle("");
+    setNewCardDescription("");
+    setIsAddingCard(false);
+  };
 
   const handleAddKeyDown = (e) => {
     if ((e.key === "Enter" && (e.ctrlKey || e.metaKey))) {
       e.preventDefault();
       handleAddCard();
-      
     }
     if (e.key === "Escape") {
       setNewCardTitle("");
@@ -51,26 +91,12 @@ export default function ListColumn({ list, cards, onCardUpdate, onListTitleUpdat
     }
   };
 
-  const handleAddCard = async() => {
-    if (!newCardTitle.trim()) return;
-    try{
-      const res = await axios.post("http://localhost:5050/api/cards", {
-        title: newCardTitle,
-        description: newCardDescription,
-        listId: list._id
-      });
-      onCardCreate(res.data);
-      setNewCardTitle("");
-      setNewCardDescription("");
-      setIsAddingCard(false);
-    } catch (err) {
-      console.error("Failed to add card", err);
-    }
-  };
   return (
     <div
-      ref={drop}
-      className="w-72 flex-shrink-0 bg-white rounded shadow p-4 border border-gray-200"
+      ref={ref}
+      className={`w-72 flex-shrink-0 bg-white rounded shadow p-4 border border-gray-200 transition-opacity duration-200 ${
+        isDragging ? "opacity-50" : ""
+      }`}
     >
       {isEditingTitle ? (
         <input
@@ -94,7 +120,12 @@ export default function ListColumn({ list, cards, onCardUpdate, onListTitleUpdat
         {cards
           .sort((a, b) => a.order - b.order)
           .map((card) => (
-            <CardItem key={card._id} card={card} onUpdate={onCardUpdate} onDelete={onCardDelete} />
+            <CardItem
+              key={card._id}
+              card={card}
+              onUpdate={onCardUpdate}
+              onDelete={onCardDelete}
+            />
           ))}
       </div>
 
@@ -112,9 +143,9 @@ export default function ListColumn({ list, cards, onCardUpdate, onListTitleUpdat
               className="w-full border px-2 py-1 rounded"
               value={newCardDescription}
               onChange={(e) => setNewCardDescription(e.target.value)}
-              onKeyDown={handleAddKeyDown}
               placeholder="Card description"
               rows={3}
+              onKeyDown={handleAddKeyDown}
             />
             <div className="flex gap-2">
               <button
@@ -140,7 +171,6 @@ export default function ListColumn({ list, cards, onCardUpdate, onListTitleUpdat
           </button>
         )}
       </div>
-
     </div>
   );
 }

@@ -77,24 +77,59 @@ const handleCardUpdate = async (cardId, updates) => {
     }
   };
 
+  const moveList = async (draggedId, hoverId) => {
+    const draggedIndex = lists.findIndex((l) => l._id === draggedId);
+    const hoverIndex = lists.findIndex((l) => l._id === hoverId);
+
+    if (draggedIndex === -1 || hoverIndex === -1) return;
+
+    const updatedLists = [...lists];
+    const [movedList] = updatedLists.splice(draggedIndex, 1);
+    updatedLists.splice(hoverIndex, 0, movedList);
+
+    // Update local state first to reflect in UI immediately
+    const reordered = updatedLists.map((list, index) => ({
+      ...list,
+      order: index,
+    }));
+    setLists(reordered);
+
+    // Persist to backend
+    try {
+      await Promise.all(
+        reordered.map((list) =>
+          axios.put(`http://localhost:5050/api/lists/${list._id}`, {
+            order: list.order,
+          })
+        )
+      );
+    } catch (err) {
+      console.error("Failed to persist reordered lists", err);
+    }
+  };
+
+
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="p-6">
         <AddListForm onAddList={handleAddList} />
       </div>
       <div className="flex overflow-x-auto gap-6 p-6 h-screen bg-gray-50">
-        {lists.map((list) => {
-          const listCards = cards.filter((card) => card.listId === list._id);
-          return (
-            <ListColumn
-              key={list._id}
-              list={list}
-              cards={listCards}
-              onCardUpdate={handleCardUpdate}
-              onListTitleUpdate={handleListTitleUpdate}
-              onCardCreate={handleCardCreate}
-              onCardDelete={handleCardDelete}
-            />
+        {lists
+          .sort((a, b) => a.order - b.order)
+          .map((list) => {
+            const listCards = cards.filter((card) => card.listId === list._id);
+            return (
+              <ListColumn
+                key={list._id}
+                list={list}
+                cards={listCards}
+                onCardUpdate={handleCardUpdate}
+                onListTitleUpdate={handleListTitleUpdate}
+                onCardCreate={handleCardCreate}
+                onCardDelete={handleCardDelete}
+                moveList={moveList}
+              />
           );
         })}
       </div>

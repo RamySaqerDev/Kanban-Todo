@@ -12,7 +12,8 @@ router.get('/', async (req, res) => {
 router.post("/", async (req, res) => {
     try {
         const { title } = req.body;
-        const newList = new List({ title });
+        const listCount = await List.countDocuments();
+        const newList = new List({ title, order: listCount });
         await newList.save();
         res.status(201).json(newList);
     } catch (err) {
