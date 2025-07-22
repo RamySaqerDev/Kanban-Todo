@@ -2,45 +2,23 @@
 import React, { useState } from "react";
 import { useDrop } from "react-dnd";
 import CardItem from "./CardItem";
+import axios from "axios";
 
-export default function ListColumn({ list, cards, onCardUpdate, onListTitleUpdate }) {
+export default function ListColumn({ list, cards, onCardUpdate, onListTitleUpdate, onCardCreate }) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(list.title);
+  const [newCardTitle, setNewCardTitle] = useState("");
+  const [newCardDescription, setNewCardDescription] = useState("");
+  const [isAddingCard, setIsAddingCard] = useState(false);
 
-  // Drop handler for the list (when dropping into an empty column)
   const [, drop] = useDrop({
     accept: "CARD",
-    drop: (draggedItem, monitor) => {
-      if (!cards.length) {
-        if (draggedItem.listId !== list._id || draggedItem.order !== 0) {
-          onCardUpdate(draggedItem._id, {
-            listId: list._id,
-            order: 0,
-          });
-        }
+    drop: (item) => {
+      if (item.listId !== list._id) {
+        onCardUpdate(item._id, { listId: list._id });
       }
     },
   });
-
-  // Move card to new position or column
-  const moveCard = ({ dragged, target, position }) => {
-    const sortedCards = [...cards].sort((a, b) => a.order - b.order);
-
-    const filtered = sortedCards.filter((c) => c._id !== dragged._id);
-
-    const newCard = {
-      ...dragged,
-      listId: list._id,
-    };
-
-    filtered.splice(position, 0, newCard);
-
-    filtered.forEach((c, i) => {
-      if (c.order !== i || c.listId !== list._id) {
-        onCardUpdate(c._id, { order: i, listId: list._id });
-      }
-    });
-  };
 
   const handleTitleBlur = () => {
     setIsEditingTitle(false);
@@ -58,6 +36,36 @@ export default function ListColumn({ list, cards, onCardUpdate, onListTitleUpdat
     }
   };
 
+
+
+  const handleAddKeyDown = (e) => {
+    if ((e.key === "Enter" && (e.ctrlKey || e.metaKey))) {
+      e.preventDefault();
+      handleAddCard();
+    }
+    if (e.key === "Escape") {
+      setNewCardTitle("");
+      setNewCardDescription("");
+      setIsAddingCard(false);
+    }
+  };
+
+  const handleAddCard = async() => {
+    if (!newCardTitle.trim()) return;
+    try{
+      const res = await axios.post("http://localhost:5050/api/cards", {
+        title: newCardTitle,
+        description: newCardDescription,
+        listId: list._id
+      });
+      onCardCreate(res.data);
+      setNewCardTitle("");
+      setNewCardDescription("");
+      setIsAddingCard(false);
+    } catch (err) {
+      console.error("Failed to add card", err);
+    }
+  };
   return (
     <div
       ref={drop}
@@ -84,17 +92,53 @@ export default function ListColumn({ list, cards, onCardUpdate, onListTitleUpdat
       <div className="flex flex-col gap-3">
         {cards
           .sort((a, b) => a.order - b.order)
-          .map((card, index) => (
-            <CardItem
-              key={card._id}
-              card={card}
-              index={index}
-              listId={list._id}
-              onUpdate={onCardUpdate}
-              moveCard={moveCard}
-            />
+          .map((card) => (
+            <CardItem key={card._id} card={card} onUpdate={onCardUpdate} />
           ))}
       </div>
+
+      <div className="mt-4">
+        {isAddingCard ? (
+          <div className="flex flex-col gap-2">
+            <input
+              className="w-full border px-2 py-1 rounded"
+              value={newCardTitle}
+              onChange={(e) => setNewCardTitle(e.target.value)}
+              placeholder="Card title"
+              autoFocus
+            />
+            <textarea
+              className="w-full border px-2 py-1 rounded"
+              value={newCardDescription}
+              onChange={(e) => setNewCardDescription(e.target.value)}
+              placeholder="Card description"
+              rows={3}
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={handleAddCard}
+                className="bg-blue-500 text-white px-3 py-1 rounded text-sm"
+              >
+                Add
+              </button>
+              <button
+                onClick={() => setIsAddingCard(false)}
+                className="text-gray-500 text-sm"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setIsAddingCard(true)}
+            className="text-blue-500 hover:underline mt-2 text-sm"
+          >
+            + Add Card
+          </button>
+        )}
+      </div>
+
     </div>
   );
 }

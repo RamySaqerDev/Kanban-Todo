@@ -54,6 +54,9 @@ const handleCardUpdate = async (cardId, updates) => {
     }
   };
 
+  const handleCardCreate = (newCard) => {
+    setCards((prev) => [...prev, newCard])
+  }
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="flex overflow-x-auto gap-6 p-6 h-screen bg-gray-50">
@@ -66,6 +69,7 @@ const handleCardUpdate = async (cardId, updates) => {
               cards={listCards}
               onCardUpdate={handleCardUpdate}
               onListTitleUpdate={handleListTitleUpdate}
+              onCardCreate={handleCardCreate}
             />
           );
         })}

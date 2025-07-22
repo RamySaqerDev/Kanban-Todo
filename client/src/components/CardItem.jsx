@@ -1,52 +1,21 @@
-import React, { useState, useRef } from "react";
-import { useDrag, useDrop } from "react-dnd";
+// src/components/CardItem.jsx
+import React, { useState } from "react";
+import { useDrag } from "react-dnd";
 
-export default function CardItem({ card, index, listId, onUpdate, moveCard }) {
+export default function CardItem({ card, onUpdate }) {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(card.title);
-  const ref = useRef(null);
 
-  const [{ isDragging }, drag] = useDrag({
+  const [{ isDragging }, drag] = useDrag(() => ({
     type: "CARD",
     item: {
-      ...card,
-      index,
-      listId,
+      _id: card._id,
+      listId: card.listId,
     },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
-  });
-
-  const [, drop] = useDrop({
-    accept: "CARD",
-    hover(draggedItem, monitor) {
-      if (!ref.current || draggedItem._id === card._id) return;
-
-      const hoverBoundingRect = ref.current.getBoundingClientRect();
-      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-      const clientOffset = monitor.getClientOffset();
-      const hoverClientY = clientOffset.y - hoverBoundingRect.top;
-
-      const isAfter = hoverClientY > hoverMiddleY;
-
-      moveCard({
-        dragged: draggedItem,
-        target: {
-          _id: card._id,
-          index,
-          listId,
-        },
-        position: isAfter ? index + 1 : index,
-      });
-
-      // Update the dragged item’s data
-      draggedItem.index = index;
-      draggedItem.listId = listId;
-    },
-  });
-
-  drag(drop(ref));
+  }));
 
   const handleBlur = () => {
     setIsEditing(false);
@@ -56,8 +25,9 @@ export default function CardItem({ card, index, listId, onUpdate, moveCard }) {
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") handleBlur();
-    if (e.key === "Escape") {
+    if (e.key === "Enter") {
+      handleBlur();
+    } else if (e.key === "Escape") {
       setTitle(card.title);
       setIsEditing(false);
     }
@@ -65,7 +35,7 @@ export default function CardItem({ card, index, listId, onUpdate, moveCard }) {
 
   return (
     <div
-      ref={ref}
+      ref={drag}
       className={`p-3 bg-white border rounded shadow-sm cursor-move ${
         isDragging ? "opacity-50" : ""
       }`}
@@ -80,8 +50,13 @@ export default function CardItem({ card, index, listId, onUpdate, moveCard }) {
           autoFocus
         />
       ) : (
-        <div onClick={() => setIsEditing(true)} className="cursor-text">
+        <div onClick={() => setIsEditing(true)} className="cursor-text font-medium">
           {card.title}
+        </div>
+      )}
+      {card.description && (
+        <div className="text-sm text-gray-600 mt-1 whitespace-pre-wrap">
+          {card.description}
         </div>
       )}
     </div>

@@ -29,6 +29,25 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+// POST /api/cards
+router.post("/", async (req, res) => {
+  try {
+    const { title, description, listId } = req.body;
+    const cardCount = await Card.countDocuments({ listId });
+    const newCard = new Card({
+      title,
+      description,
+      listId,
+      order: cardCount,
+    });
+    const saved = await newCard.save();
+    res.status(201).json(saved);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to create card" });
+  }
+});
+
+
 
 // PATCH /api/cards/:id
 router.patch("/:id", async (req, res) => {
