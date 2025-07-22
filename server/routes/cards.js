@@ -13,7 +13,8 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+// PUT /api/cards/:id
+router.put("/:id", async (req, res) => {
   try {
     const updatedCard = await Card.findByIdAndUpdate(
       req.params.id,
@@ -22,8 +23,9 @@ router.put('/:id', async (req, res) => {
     );
     if (!updatedCard) return res.status(404).json({ message: "Card not found" });
     res.json(updatedCard);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    console.error("Error updating card:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 

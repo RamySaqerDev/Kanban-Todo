@@ -1,7 +1,7 @@
+// src/components/ListColumn.jsx
 import React, { useState } from "react";
 import { useDrop } from "react-dnd";
 import CardItem from "./CardItem";
-
 
 export default function ListColumn({ list, cards, onCardUpdate, onListTitleUpdate }) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -9,11 +9,18 @@ export default function ListColumn({ list, cards, onCardUpdate, onListTitleUpdat
 
   const [, drop] = useDrop({
     accept: "CARD",
-    drop: (item) => {
-      console.log("Dropped card", item._id, "onto list", list._id);
+    drop: (draggedCard) => {
+      const isSameList = draggedCard.listId === list._id;
 
-      if (item.listId !== list._id) {
-        onCardUpdate(item._id, { listId: list._id });
+      // Determine new order (naively place at end of list)
+      const maxOrder = cards.reduce((max, c) => Math.max(max, c.order || 0), 0);
+      const newOrder = maxOrder + 1;
+
+      if (!isSameList) {
+        onCardUpdate(draggedCard._id, {
+          listId: list._id,
+          order: newOrder,
+        });
       }
     },
   });
@@ -57,9 +64,11 @@ export default function ListColumn({ list, cards, onCardUpdate, onListTitleUpdat
         </h2>
       )}
       <div className="flex flex-col gap-3">
-        {cards.map((card) => (
-          <CardItem key={card._id} card={card} onUpdate={onCardUpdate} />
-        ))}
+        {cards
+          .sort((a, b) => (a.order || 0) - (b.order || 0))
+          .map((card) => (
+            <CardItem key={card._id} card={card} onUpdate={onCardUpdate} />
+          ))}
       </div>
     </div>
   );
